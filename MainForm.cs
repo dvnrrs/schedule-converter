@@ -71,70 +71,95 @@ namespace ScheduleConverter
 
 			try
 			{
-				var data = new DataTable();
-
 				var builder = new OleDbConnectionStringBuilder();
 				builder.DataSource = _inputTextBox.Text;
 				builder.Provider = "Microsoft.ACE.OLEDB.12.0";
 				builder["Extended Properties"] = "Excel 12.0; HDR=YES";
+
+				var rowsByFile = new Dictionary<string, List<string>>();
+				int validSheets = 0;
 
 				using (var connection = new OleDbConnection(builder.ConnectionString))
 				{
 					connection.Open();
 
 					var sheets = new List<string>(GetSheetNames(connection));
-					if (sheets.Count != 1) throw new InvalidDataException(
-						"The Excel document has more than one worksheet; please " +
-						"ensure the input file contains only a single sheet!");
 
-					new OleDbDataAdapter("SELECT * FROM [" + sheets[0] + "]", connection).Fill(data);
+					for (int i = 0; i < sheets.Count; ++i)
+					{
+						var data = new DataTable();
+						new OleDbDataAdapter("SELECT * FROM [" + sheets[0] + "]", connection).Fill(data);
+
+						if (data.Columns["Course"] == null ||
+							data.Columns["Session Name"] == null ||
+							data.Columns["Location"] == null ||
+							data.Columns["Duration"] == null ||
+							data.Columns["Start Date/Time"] == null ||
+							data.Columns["Presenters"] == null)
+						{
+							continue;
+						}
+
+						++validSheets;
+
+						foreach (var row in data.AsEnumerable())
+						{
+							var courseStr = row.Field<string>("Course");
+							var sessionNameStr = row.Field<string>("Session Name");
+							var locationStr = row.Field<string>("Location");
+							var durationStr = row.Field<string>("Duration");
+							var startDateTimeStr = row.Field<string>("Start Date/Time");
+							var presentersStr = row.Field<string>("Presenters");
+
+							var startDate = DateTime.ParseExact(row.Field<string>("Start Date/Time"),
+								"MM/dd/yyyy 'at' hh:mm tt",
+								CultureInfo.InvariantCulture,
+								DateTimeStyles.AssumeLocal);
+							var duration = TimeSpan.ParseExact(row.Field<string>("Duration"),
+								"h' hours and 'm' mins'",
+								CultureInfo.InvariantCulture,
+								TimeSpanStyles.None);
+							var folder = string.Format("{0} ({1} {2:0000})",
+								row.Field<string>("Course"),
+								_monthNames[startDate.Month],
+								startDate.Year);
+
+							var recorder = recorders.ContainsKey(locationStr) ?
+								recorders[locationStr] : locationStr;
+
+							var key = startDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+							var filename = _outputTextBox.Text;
+							filename = Path.Combine(
+								Path.GetDirectoryName(filename),
+								string.Format("{0} ({1}){2}",
+									Path.GetFileNameWithoutExtension(filename),
+									key,
+									Path.GetExtension(filename)));
+
+							if (!rowsByFile.ContainsKey(filename)) rowsByFile[filename] = new List<string>();
+							rowsByFile[filename].Add(string.Join(",",
+								sessionNameStr,
+								recorder,
+								startDate.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+								startDate.ToString("h:mm tt", CultureInfo.InvariantCulture),
+								(startDate.Add(duration)).ToString("h:mm tt", CultureInfo.InvariantCulture),
+								presentersStr,
+								folder));
+						}
+
+					}
 				}
 
-				var rowsByFile = new Dictionary<string, List<string>>();
-
-				foreach (var row in data.AsEnumerable())
+				if (validSheets == 0)
 				{
-					var courseStr = row.Field<string>("Course");
-					var sessionNameStr = row.Field<string>("Session Name");
-					var locationStr = row.Field<string>("Location");
-					var durationStr = row.Field<string>("Duration");
-					var startDateTimeStr = row.Field<string>("Start Date/Time");
-					var presentersStr = row.Field<string>("Presenters");
-
-					var startDate = DateTime.ParseExact(row.Field<string>("Start Date/Time"),
-						"MM/dd/yyyy 'at' hh:mm tt",
-						CultureInfo.InvariantCulture,
-						DateTimeStyles.AssumeLocal);
-					var duration = TimeSpan.ParseExact(row.Field<string>("Duration"),
-						"h' hours and 'm' mins'",
-						CultureInfo.InvariantCulture,
-						TimeSpanStyles.None);
-					var folder = string.Format("{0} ({1} {2:0000})",
-						row.Field<string>("Course"),
-						_monthNames[startDate.Month],
-						startDate.Year);
-
-					var recorder = recorders.ContainsKey(locationStr) ?
-						recorders[locationStr] : locationStr;
-
-					var key = startDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-					var filename = _outputTextBox.Text;
-					filename = Path.Combine(
-						Path.GetDirectoryName(filename),
-						string.Format("{0} ({1}){2}",
-							Path.GetFileNameWithoutExtension(filename),
-							key,
-							Path.GetExtension(filename)));
-
-					if (!rowsByFile.ContainsKey(filename)) rowsByFile[filename] = new List<string>();
-					rowsByFile[filename].Add(string.Join(",",
-						sessionNameStr,
-						recorder,
-						startDate.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-						startDate.ToString("h:mm tt", CultureInfo.InvariantCulture),
-						(startDate.Add(duration)).ToString("h:mm tt", CultureInfo.InvariantCulture),
-						presentersStr,
-						folder));
+					MessageBox.Show(this, "No worksheets with a full set of schedule columns were " +
+						"found in the input spreadsheet. Please ensure that the spreadsheet contains " +
+						"at least one sheet that has columns named Course, Session Name, Location, " +
+						"Duration, Start Date/Time and Presenters.",
+						"No valid data found",
+						MessageBoxButtons.OK,
+						MessageBoxIcon.Warning);
+					return;
 				}
 
 				foreach (var filename in rowsByFile.Keys)
@@ -185,20 +210,10 @@ namespace ScheduleConverter
 		{
 			var schema = connection.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
 			if (schema == null) throw new InvalidDataException("Failed to read Excel schema");
-			foreach (DataRow row in schema.Rows) yield return row["TABLE_NAME"].ToString();
-		}
 
-		private static string GetRemoteRecorder(string location)
-		{
-			switch (location)
+			foreach (DataRow row in schema.Rows)
 			{
-				case "Classroom 1": return "SK_CR1_CAPTURE";
-				case "Classroom 2": return "SK_CR2a_CAPTURE";
-				case "Multipurpose Lab": return "SK_MPL_CAPTURE";
-				case "Upper Auditorium": return "SK_AUDU_CAPTURE";
-				case "Lower Auditorium": return "SK_AUDL_CAPTURE";
-				case "Upper & Lower Auditorium": return "SK_aUDU_CAPTURE";
-				default: return "XXX";
+				yield return row["TABLE_NAME"].ToString();
 			}
 		}
 
