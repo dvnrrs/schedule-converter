@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.OleDb;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -66,7 +67,7 @@ namespace ScheduleConverter
 				var builder = new OleDbConnectionStringBuilder();
 				builder.DataSource = _inputTextBox.Text;
 				builder.Provider = "Microsoft.ACE.OLEDB.12.0";
-				builder["Extended Properties"] = "Excel 12.0; HDR=NO";
+				builder["Extended Properties"] = "Excel 12.0; HDR=YES";
 
 				using (var connection = new OleDbConnection(builder.ConnectionString))
 				{
@@ -80,6 +81,37 @@ namespace ScheduleConverter
 					new OleDbDataAdapter("SELECT * FROM [" + sheets[0] + "]", connection).Fill(data);
 				}
 
+				using (var file = new FileStream(_outputTextBox.Text, FileMode.Create, FileAccess.Write))
+				using (var writer = new StreamWriter(file, Encoding.UTF8))
+				{
+					foreach (var row in data.AsEnumerable())
+					{
+						var sessionName = row.Field<string>(3);
+						var remoteRecorder = GetRemoteRecorder(row.Field<string>(4));
+						var startDate = DateTime.ParseExact(row.Field<string>(6),
+							"MM/dd/yyyy 'at' hh:mm tt",
+							CultureInfo.InvariantCulture,
+							DateTimeStyles.AssumeLocal);
+						var duration = TimeSpan.ParseExact(row.Field<string>(5),
+							"h' hours and 'm' mins'",
+							CultureInfo.InvariantCulture,
+							TimeSpanStyles.None);
+						var presenter = row.Field<string>(8);
+						var folder = string.Format("{0} ({1} {2:0000})",
+							row.Field<string>(2),
+							_monthNames[startDate.Month],
+							startDate.Year);
+
+						writer.WriteLine(string.Join(",",
+							sessionName,
+							remoteRecorder,
+							startDate.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+							startDate.ToString("h:mm tt", CultureInfo.InvariantCulture),
+							(startDate.Add(duration)).ToString("h:mm tt", CultureInfo.InvariantCulture),
+							presenter,
+							folder));
+					}
+				}
 
 				MessageBox.Show(this,
 					"The conversion was successful.",
@@ -104,5 +136,28 @@ namespace ScheduleConverter
 			if (schema == null) throw new InvalidDataException("Failed to read Excel schema");
 			foreach (DataRow row in schema.Rows) yield return row["TABLE_NAME"].ToString();
 		}
+
+		private static string GetRemoteRecorder(string location)
+		{
+			switch (location)
+			{
+				case "Classroom 1": return "SK_CR1_CAPTURE";
+				case "Classroom 2": return "SK_CR2a_CAPTURE";
+				case "Multipurpose Lab": return "SK_MPL_CAPTURE";
+				case "Upper Auditorium": return "SK_AUDU_CAPTURE";
+				case "Lower Auditorium": return "SK_AUDL_CAPTURE";
+				case "Upper & Lower Auditorium": return "SK_aUDU_CAPTURE";
+				default: return "XXX";
+			}
+		}
+
+		private static string[] _monthNames = new[]
+		{
+			"",
+			"Jan", "Feb", "Mar",
+			"Apr", "May", "June",
+			"July", "Aug", "Sept",
+			"Oct", "Nov", "Dec"
+		};
 	}
 }

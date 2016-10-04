@@ -182,6 +182,8 @@
 			this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
 			this.ClientSize = new System.Drawing.Size(702, 298);
 			this.Controls.Add(this._mainTable);
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+			this.MaximizeBox = false;
 			this.Name = "MainForm";
 			this.Text = "Schedule Converter";
 			this._mainTable.ResumeLayout(false);
