@@ -60,14 +60,14 @@
 			this._mainTable.Controls.Add(this._buttonPanel, 0, 2);
 			this._mainTable.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._mainTable.Location = new System.Drawing.Point(0, 0);
-			this._mainTable.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+			this._mainTable.Margin = new System.Windows.Forms.Padding(4);
 			this._mainTable.Name = "_mainTable";
 			this._mainTable.Padding = new System.Windows.Forms.Padding(20, 18, 20, 18);
 			this._mainTable.RowCount = 3;
 			this._mainTable.RowStyles.Add(new System.Windows.Forms.RowStyle());
 			this._mainTable.RowStyles.Add(new System.Windows.Forms.RowStyle());
 			this._mainTable.RowStyles.Add(new System.Windows.Forms.RowStyle());
-			this._mainTable.Size = new System.Drawing.Size(936, 367);
+			this._mainTable.Size = new System.Drawing.Size(886, 187);
 			this._mainTable.TabIndex = 0;
 			// 
 			// _inputLabel
@@ -147,7 +147,7 @@
 			this._buttonPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
 			this._mainTable.SetColumnSpan(this._buttonPanel, 3);
 			this._buttonPanel.Controls.Add(this._convertButton);
-			this._buttonPanel.Location = new System.Drawing.Point(816, 221);
+			this._buttonPanel.Location = new System.Drawing.Point(766, 131);
 			this._buttonPanel.Margin = new System.Windows.Forms.Padding(0, 25, 0, 0);
 			this._buttonPanel.Name = "_buttonPanel";
 			this._buttonPanel.Size = new System.Drawing.Size(100, 28);
@@ -181,10 +181,10 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.AutoSize = true;
 			this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-			this.ClientSize = new System.Drawing.Size(936, 367);
+			this.ClientSize = new System.Drawing.Size(886, 187);
 			this.Controls.Add(this._mainTable);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-			this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+			this.Margin = new System.Windows.Forms.Padding(4);
 			this.MaximizeBox = false;
 			this.Name = "MainForm";
 			this.Text = "Schedule Converter";

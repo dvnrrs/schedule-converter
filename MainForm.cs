@@ -94,26 +94,28 @@ namespace ScheduleConverter
 
 				foreach (var row in data.AsEnumerable())
 				{
-					var sessionName = row.Field<string>(3);
-					var remoteRecorder = row.Field<string>(4);
-					var startDate = DateTime.ParseExact(row.Field<string>(6),
+					var courseStr = row.Field<string>("Course");
+					var sessionNameStr = row.Field<string>("Session Name");
+					var locationStr = row.Field<string>("Location");
+					var durationStr = row.Field<string>("Duration");
+					var startDateTimeStr = row.Field<string>("Start Date/Time");
+					var presentersStr = row.Field<string>("Presenters");
+
+					var startDate = DateTime.ParseExact(row.Field<string>("Start Date/Time"),
 						"MM/dd/yyyy 'at' hh:mm tt",
 						CultureInfo.InvariantCulture,
 						DateTimeStyles.AssumeLocal);
-					var duration = TimeSpan.ParseExact(row.Field<string>(5),
+					var duration = TimeSpan.ParseExact(row.Field<string>("Duration"),
 						"h' hours and 'm' mins'",
 						CultureInfo.InvariantCulture,
 						TimeSpanStyles.None);
-					var presenter = row.Field<string>(8);
 					var folder = string.Format("{0} ({1} {2:0000})",
-						row.Field<string>(2),
+						row.Field<string>("Course"),
 						_monthNames[startDate.Month],
 						startDate.Year);
 
-					if (recorders.ContainsKey(remoteRecorder))
-					{
-						remoteRecorder = recorders[remoteRecorder];
-					}
+					var recorder = recorders.ContainsKey(locationStr) ?
+						recorders[locationStr] : locationStr;
 
 					var key = startDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 					var filename = _outputTextBox.Text;
@@ -126,12 +128,12 @@ namespace ScheduleConverter
 
 					if (!rowsByFile.ContainsKey(filename)) rowsByFile[filename] = new List<string>();
 					rowsByFile[filename].Add(string.Join(",",
-						sessionName,
-						remoteRecorder,
+						sessionNameStr,
+						recorder,
 						startDate.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
 						startDate.ToString("h:mm tt", CultureInfo.InvariantCulture),
 						(startDate.Add(duration)).ToString("h:mm tt", CultureInfo.InvariantCulture),
-						presenter,
+						presentersStr,
 						folder));
 				}
 
