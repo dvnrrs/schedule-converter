@@ -118,7 +118,7 @@ namespace ScheduleConverter
 							var duration = TimeSpan.ParseExact(row.Field<string>("Duration"),
 								"h' hours and 'm' mins'",
 								CultureInfo.InvariantCulture,
-								TimeSpanStyles.None);
+								TimeSpanStyles.None).Add(TimeSpan.FromMinutes(5));
 							var folder = string.Format("{0} ({1} {2:0000})",
 								row.Field<string>("Course"),
 								_monthNames[startDate.Month],
