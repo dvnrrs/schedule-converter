@@ -1,0 +1,6 @@
+Classroom 1 = SK_CR1_CAPTURE
+Classroom 2 = SK_CR2a_CAPTURE
+Multipurpose Lab = SK_MPL_CAPTURE
+Upper Auditorium = SK_AUDU_CAPTURE
+Lower Auditorium = SK_AUDL_CAPTURE
+Upper & Lower Auditorium = SK_AUDU_CAPTURE

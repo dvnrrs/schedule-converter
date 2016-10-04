@@ -31,6 +31,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "AccessDatabaseEngine.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 Source: "bin\x86\Release\ScheduleConverter.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "recorders.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
