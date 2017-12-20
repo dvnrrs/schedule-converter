@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Schedule Converter"
-#define MyAppVersion "1.0"
+#define MyAppVersion "2.0"
 #define MyAppPublisher "Orchard Media"
 #define MyAppExeName "ScheduleConverter.exe"
 
@@ -29,8 +29,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "AccessDatabaseEngine.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
-Source: "bin\x86\Release\ScheduleConverter.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "bin\Release\ScheduleConverter.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "bin\Release\CsvHelper.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "recorders.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
@@ -39,12 +39,4 @@ Name: "{commonprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{tmp}\AccessDatabaseEngine.exe"; Parameters: "/passive"; Check: AccessEngineNotInstalled; StatusMsg: Installing Access Database Engine 2010
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
-
-[Code]
-
-function AccessEngineNotInstalled: Boolean;
-begin
-  Result := not RegKeyExists(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Office\14.0');
-end;

@@ -1,10 +1,8 @@
-﻿using System;
+﻿using CsvHelper;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.OleDb;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
@@ -28,7 +26,7 @@ namespace ScheduleConverter
 				{
 					_outputTextBox.Text = Path.Combine(
 						Path.GetDirectoryName(_openFileDialog.FileName),
-						Path.GetFileNameWithoutExtension(_openFileDialog.FileName) + ".csv");
+						Path.GetFileNameWithoutExtension(_openFileDialog.FileName) + ".converted.csv");
 				}
 			}
 		}
@@ -71,121 +69,69 @@ namespace ScheduleConverter
 
 			try
 			{
-				var builder = new OleDbConnectionStringBuilder();
-				builder.DataSource = _inputTextBox.Text;
-				builder.Provider = "Microsoft.ACE.OLEDB.12.0";
-				builder["Extended Properties"] = "Excel 12.0; HDR=YES";
+				var rows = new List<string>();
 
-				var rowsByFile = new Dictionary<string, List<string>>();
-				int validSheets = 0;
-
-				using (var connection = new OleDbConnection(builder.ConnectionString))
+				using (FileStream inputFile = new FileStream(_inputTextBox.Text, FileMode.Open, FileAccess.Read))
+				using (FileStream outputFile = new FileStream(_outputTextBox.Text, FileMode.Create, FileAccess.Write))
+				using (StreamReader inputReader = new StreamReader(inputFile, Encoding.UTF8))
+				using (StreamWriter outputWriter = new StreamWriter(outputFile, new UTF8Encoding(false)))
+				using (CsvReader inputCsvReader = new CsvReader(inputReader))
+				using (CsvWriter outputCsvWriter = new CsvWriter(outputWriter))
 				{
-					connection.Open();
+					if (!inputCsvReader.Read() || !inputCsvReader.ReadHeader())
+						throw new Exception("Failed to read CSV header row");
 
-					var sheets = new List<string>(GetSheetNames(connection));
+					int eventNameField = inputCsvReader.GetFieldIndex("Event Name", 0, true);
+					int eventDescriptionField = inputCsvReader.GetFieldIndex("Event Description", 0, true);
+					int roomField = inputCsvReader.GetFieldIndex("Room", 0, true);
+					int startDateField = inputCsvReader.GetFieldIndex("Start Date", 0, true);
+					int startTimeField = inputCsvReader.GetFieldIndex("Start Time", 0, true);
+					int endTimeField = inputCsvReader.GetFieldIndex("End Time", 0, true);
 
-					for (int i = 0; i < sheets.Count; ++i)
+					if (eventNameField < 0 ||
+						eventDescriptionField < 0 ||
+						roomField < 0 ||
+						startDateField < 0 ||
+						startTimeField < 0 ||
+						endTimeField < 0)
 					{
-						var data = new DataTable();
-						new OleDbDataAdapter("SELECT * FROM [" + sheets[0] + "]", connection).Fill(data);
-
-						if (data.Columns["Course"] == null ||
-							data.Columns["Session Name"] == null ||
-							data.Columns["Location"] == null ||
-							data.Columns["Duration"] == null ||
-							data.Columns["Start Date/Time"] == null ||
-							data.Columns["Presenters"] == null)
-						{
-							continue;
-						}
-
-						++validSheets;
-
-						foreach (var row in data.AsEnumerable())
-						{
-							var courseStr = row.Field<string>("Course");
-							var sessionNameStr = row.Field<string>("Session Name");
-							var locationStr = row.Field<string>("Location");
-							var durationStr = row.Field<string>("Duration");
-							var startDateTimeStr = row.Field<string>("Start Date/Time");
-							var presentersStr = row.Field<string>("Presenters");
-
-							var startDate = DateTime.ParseExact(row.Field<string>("Start Date/Time"),
-								"MM/dd/yyyy 'at' hh:mm tt",
-								CultureInfo.InvariantCulture,
-								DateTimeStyles.AssumeLocal);
-							var duration = TimeSpan.ParseExact(row.Field<string>("Duration"),
-								"h' hours and 'm' mins'",
-								CultureInfo.InvariantCulture,
-								TimeSpanStyles.None).Add(TimeSpan.FromMinutes(5));
-							var folder = string.Format("{0} ({1} {2:0000})",
-								row.Field<string>("Course"),
-								_monthNames[startDate.Month],
-								startDate.Year);
-
-							var recorder = recorders.ContainsKey(locationStr) ?
-								recorders[locationStr] : locationStr;
-
-							var key = startDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-							var filename = _outputTextBox.Text;
-							filename = Path.Combine(
-								Path.GetDirectoryName(filename),
-								string.Format("{0} ({1}){2}",
-									Path.GetFileNameWithoutExtension(filename),
-									key,
-									Path.GetExtension(filename)));
-
-							if (!rowsByFile.ContainsKey(filename)) rowsByFile[filename] = new List<string>();
-							rowsByFile[filename].Add(string.Join(",",
-								sessionNameStr,
-								recorder,
-								startDate.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-								startDate.ToString("h:mm tt", CultureInfo.InvariantCulture),
-								(startDate.Add(duration)).ToString("h:mm tt", CultureInfo.InvariantCulture),
-								presentersStr,
-								folder));
-						}
-
+						throw new Exception("Input CSV is missing required columns. The required columns are:\n\n" +
+							"Event Name\n" +
+							"Event Description\n" +
+							"Room\n" +
+							"Start Date\n" +
+							"Start Time\n" +
+							"End Time\n");
 					}
-				}
 
-				if (validSheets == 0)
-				{
-					MessageBox.Show(this, "No worksheets with a full set of schedule columns were " +
-						"found in the input spreadsheet. Please ensure that the spreadsheet contains " +
-						"at least one sheet that has columns named Course, Session Name, Location, " +
-						"Duration, Start Date/Time and Presenters.",
-						"No valid data found",
-						MessageBoxButtons.OK,
-						MessageBoxIcon.Warning);
-					return;
-				}
-
-				foreach (var filename in rowsByFile.Keys)
-				{
-					if (!File.Exists(filename)) continue;
-
-					if (MessageBox.Show(this,
-						"One or more output files exist. Do you want to overwrite them?",
-						"Confirm overwrite files",
-						MessageBoxButtons.YesNo,
-						MessageBoxIcon.Warning,
-						MessageBoxDefaultButton.Button2) != DialogResult.Yes)
-						return;
-
-					break;
-				}
-
-				foreach (var entry in rowsByFile)
-				{
-					using (var file = new FileStream(entry.Key, FileMode.Create, FileAccess.Write))
-					using (var writer = new StreamWriter(file, Encoding.UTF8))
+					while (inputCsvReader.Read())
 					{
-						foreach (var row in entry.Value)
-						{
-							writer.WriteLine(row);
-						}
+						string eventName = inputCsvReader.GetField(eventNameField);
+						string eventDescription = inputCsvReader.GetField(eventDescriptionField);
+						string room = inputCsvReader.GetField(roomField);
+						string startDate = inputCsvReader.GetField(startDateField);
+						string startTime = inputCsvReader.GetField(startTimeField);
+						string endTime = inputCsvReader.GetField(endTimeField);
+
+						var recorder = recorders.ContainsKey(room) ? recorders[room] : room;
+
+						string prefix = _folderPrefixTextBox.Text.Trim();
+						if (prefix.Length > 0) prefix += ' ';
+						string folder = prefix + (eventName.EndsWith(" - " + room) ? eventName.Substring(0, eventName.Length - 3 - room.Length) : eventName);
+
+						outputCsvWriter.WriteField(eventName);
+						outputCsvWriter.WriteField(recorder);
+						outputCsvWriter.WriteField(startDate);
+						outputCsvWriter.WriteField(startTime);
+						outputCsvWriter.WriteField(
+							DateTime.ParseExact(endTime, "h:mm tt", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal)
+								.Add(TimeSpan.FromMinutes(5))
+								.ToString("h:mm tt"));
+						outputCsvWriter.WriteField("");
+						outputCsvWriter.WriteField(eventDescription);
+						outputCsvWriter.WriteField(folder);
+
+						outputCsvWriter.NextRecord();
 					}
 				}
 
@@ -205,25 +151,5 @@ namespace ScheduleConverter
 					MessageBoxIcon.Error);
 			}
 		}
-
-		private static IEnumerable<string> GetSheetNames(OleDbConnection connection)
-		{
-			var schema = connection.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
-			if (schema == null) throw new InvalidDataException("Failed to read Excel schema");
-
-			foreach (DataRow row in schema.Rows)
-			{
-				yield return row["TABLE_NAME"].ToString();
-			}
-		}
-
-		private static string[] _monthNames = new[]
-		{
-			"",
-			"Jan", "Feb", "Mar",
-			"Apr", "May", "June",
-			"July", "Aug", "Sept",
-			"Oct", "Nov", "Dec"
-		};
 	}
 }
