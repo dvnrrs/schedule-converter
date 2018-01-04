@@ -126,7 +126,7 @@ namespace ScheduleConverter
 						outputCsvWriter.WriteField(
 							DateTime.ParseExact(endTime, "h:mm tt", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal)
 								.Add(TimeSpan.FromMinutes(5))
-								.ToString("h:mm tt"));
+								.ToString("hh:mm tt"));
 						outputCsvWriter.WriteField("");
 						outputCsvWriter.WriteField(eventDescription);
 						outputCsvWriter.WriteField(folder);
