@@ -86,6 +86,7 @@ namespace ScheduleConverter
 					int roomField = inputCsvReader.GetFieldIndex("Room", 0, true);
 					int startDateField = inputCsvReader.GetFieldIndex("Start Date", 0, true);
 					int startTimeField = inputCsvReader.GetFieldIndex("Start Time", 0, true);
+					int endDateField = inputCsvReader.GetFieldIndex("End Date", 0, true);
 					int endTimeField = inputCsvReader.GetFieldIndex("End Time", 0, true);
 
 					if (eventNameField < 0 ||
@@ -93,6 +94,7 @@ namespace ScheduleConverter
 						roomField < 0 ||
 						startDateField < 0 ||
 						startTimeField < 0 ||
+						endDateField < 0 ||
 						endTimeField < 0)
 					{
 						throw new Exception("Input CSV is missing required columns. The required columns are:\n\n" +
@@ -101,6 +103,7 @@ namespace ScheduleConverter
 							"Room\n" +
 							"Start Date\n" +
 							"Start Time\n" +
+							"End Date\n" +
 							"End Time\n");
 					}
 
@@ -111,6 +114,7 @@ namespace ScheduleConverter
 						string room = inputCsvReader.GetField(roomField);
 						string startDate = inputCsvReader.GetField(startDateField);
 						string startTime = inputCsvReader.GetField(startTimeField);
+						string endDate = inputCsvReader.GetField(endDateField);
 						string endTime = inputCsvReader.GetField(endTimeField);
 
 						var recorder = recorders.ContainsKey(room) ? recorders[room] : room;
@@ -119,15 +123,21 @@ namespace ScheduleConverter
 						if (prefix.Length > 0) prefix += ' ';
 						string folder = prefix + (eventName.EndsWith(" - " + room) ? eventName.Substring(0, eventName.Length - 3 - room.Length) : eventName);
 
+						var start = DateTime.ParseExact(
+							startDate + ' ' + startTime,
+							"M/d/yyyy h:mm tt", CultureInfo.InvariantCulture,
+							DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+
+						var end = DateTime.ParseExact(
+							endDate + ' ' + endTime,
+							"M/d/yyyy h:mm tt", CultureInfo.InvariantCulture,
+							DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+
 						outputCsvWriter.WriteField(eventName);
 						outputCsvWriter.WriteField(recorder);
-						outputCsvWriter.WriteField(startDate);
-						outputCsvWriter.WriteField(startTime);
-						outputCsvWriter.WriteField(
-							DateTime.ParseExact(endTime, "h:mm tt", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal)
-								.Add(TimeSpan.FromMinutes(5))
-								.ToString("hh:mm tt"));
-						outputCsvWriter.WriteField("");
+						outputCsvWriter.WriteField(start.ToString("MM/dd/yyyy"));
+						outputCsvWriter.WriteField(start.ToString("hh:mm tt"));
+						outputCsvWriter.WriteField(end.Add(TimeSpan.FromMinutes(5)).ToString("hh:mm tt"));
 						outputCsvWriter.WriteField(eventDescription);
 						outputCsvWriter.WriteField(folder);
 
