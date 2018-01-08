@@ -131,13 +131,14 @@ namespace ScheduleConverter
 						var end = DateTime.ParseExact(
 							endDate + ' ' + endTime,
 							"M/d/yyyy h:mm tt", CultureInfo.InvariantCulture,
-							DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+							DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal)
+							.Add(TimeSpan.FromMinutes(5));
 
 						outputCsvWriter.WriteField(eventName);
 						outputCsvWriter.WriteField(recorder);
 						outputCsvWriter.WriteField(start.ToString("MM/dd/yyyy"));
-						outputCsvWriter.WriteField(start.ToString("hh:mm tt"));
-						outputCsvWriter.WriteField(end.Add(TimeSpan.FromMinutes(5)).ToString("hh:mm tt"));
+						outputCsvWriter.WriteField(start.ToString("HH:mm:ss"));
+						outputCsvWriter.WriteField(end.ToString("HH:mm:ss"));
 						outputCsvWriter.WriteField(eventDescription);
 						outputCsvWriter.WriteField(folder);
 
