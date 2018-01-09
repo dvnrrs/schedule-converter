@@ -136,9 +136,9 @@ namespace ScheduleConverter
 
 						outputCsvWriter.WriteField(eventName);
 						outputCsvWriter.WriteField(recorder);
-						outputCsvWriter.WriteField(start.ToString("MM/dd/yyyy"));
-						outputCsvWriter.WriteField(start.ToString("HH:mm:ss"));
-						outputCsvWriter.WriteField(end.ToString("HH:mm:ss"));
+						outputCsvWriter.WriteField(start.ToString("yyyy-MM-dd"));
+						outputCsvWriter.WriteField(start.ToString("yyyy-MM-ddTHH\\:mm\\:ss"));
+						outputCsvWriter.WriteField(end.ToString("yyyy-MM-ddTHH\\:mm\\:ss"));
 						outputCsvWriter.WriteField(eventDescription);
 						outputCsvWriter.WriteField(folder);
 

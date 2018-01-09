@@ -35,12 +35,12 @@
 			this._outputLabel = new System.Windows.Forms.Label();
 			this._outputTextBox = new System.Windows.Forms.TextBox();
 			this._outputBrowseButton = new System.Windows.Forms.Button();
+			this._folderPrefixLabel = new System.Windows.Forms.Label();
+			this._folderPrefixTextBox = new System.Windows.Forms.TextBox();
 			this._buttonPanel = new System.Windows.Forms.FlowLayoutPanel();
 			this._convertButton = new System.Windows.Forms.Button();
 			this._openFileDialog = new System.Windows.Forms.OpenFileDialog();
 			this._saveFileDialog = new System.Windows.Forms.SaveFileDialog();
-			this._folderPrefixLabel = new System.Windows.Forms.Label();
-			this._folderPrefixTextBox = new System.Windows.Forms.TextBox();
 			this._mainTable.SuspendLayout();
 			this._buttonPanel.SuspendLayout();
 			this.SuspendLayout();
@@ -145,6 +145,27 @@
 			this._outputBrowseButton.UseVisualStyleBackColor = true;
 			this._outputBrowseButton.Click += new System.EventHandler(this.OnOutputBrowseButtonClick);
 			// 
+			// _folderPrefixLabel
+			// 
+			this._folderPrefixLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+			this._folderPrefixLabel.AutoSize = true;
+			this._folderPrefixLabel.Location = new System.Drawing.Point(15, 89);
+			this._folderPrefixLabel.Margin = new System.Windows.Forms.Padding(0, 5, 0, 5);
+			this._folderPrefixLabel.Name = "_folderPrefixLabel";
+			this._folderPrefixLabel.Size = new System.Drawing.Size(96, 13);
+			this._folderPrefixLabel.TabIndex = 6;
+			this._folderPrefixLabel.Text = "Folder name prefix:";
+			// 
+			// _folderPrefixTextBox
+			// 
+			this._folderPrefixTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
+			this._folderPrefixTextBox.Location = new System.Drawing.Point(130, 86);
+			this._folderPrefixTextBox.Margin = new System.Windows.Forms.Padding(5, 5, 10, 5);
+			this._folderPrefixTextBox.Name = "_folderPrefixTextBox";
+			this._folderPrefixTextBox.Size = new System.Drawing.Size(300, 20);
+			this._folderPrefixTextBox.TabIndex = 7;
+			this._folderPrefixTextBox.Text = "Ross Vet - Jan 2018 - ";
+			// 
 			// _buttonPanel
 			// 
 			this._buttonPanel.Anchor = System.Windows.Forms.AnchorStyles.Right;
@@ -180,27 +201,6 @@
 			this._saveFileDialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
 			this._saveFileDialog.Title = "Select CSV output file";
 			// 
-			// _folderPrefixLabel
-			// 
-			this._folderPrefixLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-			this._folderPrefixLabel.AutoSize = true;
-			this._folderPrefixLabel.Location = new System.Drawing.Point(15, 89);
-			this._folderPrefixLabel.Margin = new System.Windows.Forms.Padding(0, 5, 0, 5);
-			this._folderPrefixLabel.Name = "_folderPrefixLabel";
-			this._folderPrefixLabel.Size = new System.Drawing.Size(96, 13);
-			this._folderPrefixLabel.TabIndex = 6;
-			this._folderPrefixLabel.Text = "Folder name prefix:";
-			// 
-			// _folderPrefixTextBox
-			// 
-			this._folderPrefixTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
-			this._folderPrefixTextBox.Location = new System.Drawing.Point(130, 86);
-			this._folderPrefixTextBox.Margin = new System.Windows.Forms.Padding(5, 5, 10, 5);
-			this._folderPrefixTextBox.Name = "_folderPrefixTextBox";
-			this._folderPrefixTextBox.Size = new System.Drawing.Size(300, 20);
-			this._folderPrefixTextBox.TabIndex = 7;
-			this._folderPrefixTextBox.Text = "Ross Vet - Jan 2018 - ";
-			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -212,7 +212,7 @@
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
 			this.MaximizeBox = false;
 			this.Name = "MainForm";
-			this.Text = "Schedule Converter";
+			this.Text = "Schedule Converter 2.0.4";
 			this._mainTable.ResumeLayout(false);
 			this._mainTable.PerformLayout();
 			this._buttonPanel.ResumeLayout(false);
